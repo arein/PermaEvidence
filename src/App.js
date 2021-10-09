@@ -238,7 +238,7 @@ function App() {
           )}
         </ImageUploading>
         {images.length > 0 && !pendingTransactionId && !existingHash && 
-        <button onClick={createPermahash}>Store Hash Permanently</button>
+        <button onClick={createPermahash}>Store Hash Permanently (you need to have ARConnect Installed to do this)</button>
         }
       </main>
     </div>
