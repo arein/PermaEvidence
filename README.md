@@ -14,3 +14,6 @@ You will also see any lint errors in the console.
 
 `yarn deploy --key-file path/to/arweave-key.json`
 
+## Deploying Smart Contract
+
+`arn deploy-contracts --key-file path/to/arweave-key.json`
