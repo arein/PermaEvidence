@@ -99,7 +99,8 @@ function App() {
       }
       {pendingTransactionId &&
         <div>
-            You have a pending transaction with id '{pendingTransactionId}'. We check its status every 2 seconds for you. 
+            Your permahash is uploading with transaction id '{pendingTransactionId}'. This might take a few minutes. We check its status every 2 seconds for you.
+            You can also check it at https://viewblock.io/arweave/tx/{pendingTransactionId}
             <span role="img" aria-label="Nerd smiley emoji">
               🤓
             </span>
