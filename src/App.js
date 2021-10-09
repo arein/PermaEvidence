@@ -10,13 +10,17 @@ function App() {
   const [images, setImages] = React.useState([]);
   const [imageHash, setImageHash] = React.useState([]);
   const [existingHash, setExistingHash] = React.useState([]);
+  const [pendingTransactionId, setPendingTransactionId] = React.useState([]);
   const maxNumber = 1;
-  const contractId = "TTRQsfcDB50dYOSJZ3CL5KDTfVs2rEIQ6Lxm6rDAUEc";
+  const contractId = "dy0QCK-wfl-KoTqsk6fomco64u9YHIhcISjNta71CSA";
   const arweave = Arweave.init({});
+  
 
   const onChange = (imageList, addUpdateIndex) => {
     // data for submit
     setImages(imageList);
+    setPendingTransactionId(false);
+    setExistingHash(false);
   };
 
   readContract(arweave, contractId).then((state) => {
@@ -48,6 +52,17 @@ function App() {
     });
   }
 
+  const startPollingPendingTransaction = (txid) => {
+    console.log("poll", txid);
+    arweave.transactions.getStatus(txid).then(res => {
+      console.log("status of tx", txid, res.status);
+      if (res.status === 202) {
+        return setTimeout(() => startPollingPendingTransaction(txid), 5000);
+      }
+      setPendingTransactionId(false);
+    });
+  };
+
   const createPermahash = () => {
     console.log("Storing hash", imageHash);
     const input = {
@@ -56,29 +71,39 @@ function App() {
     };
     interactWrite(arweave, null, contractId, input).then((result) => {
       console.log('arweave status', result);
+      setPendingTransactionId(result);
       readContract(arweave, contractId).then((state) => {
-        console.log(state);
+        console.log("state after transaction", state);
+        startPollingPendingTransaction(result);
       });
     });
   };
 
   return (
     <div className="App">
-            {images.length > 0 &&
-       <div>
-          The permahash of your image is '{imageHash}' 
-          <span role="img" aria-label="Nerd smiley emoji">
-            🤓
-          </span>
-          <br />
-          {existingHash && <p>
-              It already exists and was created by {existingHash.author} at {existingHash.createdAt} 
+      {images.length > 0 &&
+        <div>
+            The permahash of your image is '{imageHash}' 
             <span role="img" aria-label="Nerd smiley emoji">
               🤓
             </span>
-          </p>
-          }
-        </div>
+            <br />
+            {existingHash && <p>
+                It already exists and was created by {existingHash.author} at {new Date(existingHash.createdAt * 1000).toUTCString()} 
+              <span role="img" aria-label="Nerd smiley emoji">
+                🤓
+              </span>
+            </p>
+            }
+          </div>
+      }
+      {pendingTransactionId &&
+        <div>
+            You have a pending transaction with id '{pendingTransactionId}'. We check its status every 2 seconds for you. 
+            <span role="img" aria-label="Nerd smiley emoji">
+              🤓
+            </span>
+          </div>
       }
       <ImageUploading
         multiple
@@ -107,7 +132,7 @@ function App() {
             </button>
             }
             &nbsp;
-            {images.length > 0 && <button onClick={onImageRemoveAll}>Remove</button>}
+            {images.length > 0 && !pendingTransactionId && <button onClick={onImageRemoveAll}>Remove</button>}
             {imageList.map((image, index) => (
               <div key={index} className="image-item">
                 <img src={image['data_url']} alt="" width="100" />
@@ -116,7 +141,7 @@ function App() {
           </div>
         )}
       </ImageUploading>
-      {images.length > 0 &&
+      {images.length > 0 && !pendingTransactionId && !existingHash && 
        <button onClick={createPermahash}>Store Hash Permanently</button>
       }
 
