@@ -3,6 +3,7 @@ import React from 'react';
 import ImageUploading from 'react-images-uploading';
 import { readContract, interactWrite } from 'smartweave';
 import Arweave from 'arweave';
+import NeuralHash from './NeuralHash';
 
 // styles
 const pageStyles = {
@@ -80,12 +81,14 @@ const badgeStyle = {
 function App() {
 
   const [images, setImages] = React.useState([]);
-  const [imageHash, setImageHash] = React.useState([]);
-  const [existingHash, setExistingHash] = React.useState([]);
-  const [pendingTransactionId, setPendingTransactionId] = React.useState([]);
+  const [imageHash, setImageHash] = React.useState('');
+  const [isLoadingImageHash, setIsLoadingImageHash] = React.useState(false);
+  const [existingHash, setExistingHash] = React.useState('');
+  const [pendingTransactionId, setPendingTransactionId] = React.useState('');
   const maxNumber = 1;
   const contractId = "dy0QCK-wfl-KoTqsk6fomco64u9YHIhcISjNta71CSA";
   const arweave = Arweave.init({});
+  const neuralHash = new NeuralHash();
   
 
   const onChange = (imageList, addUpdateIndex) => {
@@ -93,11 +96,20 @@ function App() {
     setImages(imageList);
     setPendingTransactionId(false);
     setExistingHash(false);
+    
+    if (imageList.length > 0) {
+      setIsLoadingImageHash(true);
+      neuralHash.getNeuralHash(imageList[0]).then((hash) => {
+        console.log('yay', hash);
+        setImageHash(hash);
+        lookupImageHash(hash);
+        setIsLoadingImageHash(false);
+      }).catch((err) => {
+        console.error(err);
+        setIsLoadingImageHash(false);
+      });
+    }
   };
-
-  readContract(arweave, contractId).then((state) => {
-    console.log(state);
-  });
 
   const lookupImageHash = (hash) => {
     readContract(arweave, contractId).then((state) => {
@@ -111,18 +123,6 @@ function App() {
       }
     });
   };
-
-  if (images.length > 0) {
-    const base64 = images[0].data_url.replace(/^data:image\/(png|jpg);base64,/, "");
-    crypto.subtle.digest("SHA-256", new TextEncoder("utf-8").encode(base64)).then((buf) => {
-      const newHash = Array.prototype.map.call(new Uint8Array(buf), x=>(('00'+x.toString(16)).slice(-2))).join('');
-      if (imageHash !== newHash) {
-        setExistingHash(false);
-        setImageHash(newHash);
-        lookupImageHash(newHash);
-      }
-    });
-  }
 
   const startPollingPendingTransaction = (txid) => {
     console.log("poll", txid);
@@ -151,8 +151,23 @@ function App() {
     });
   };
 
+  const isLoading = !!isLoadingImageHash;
+
   return (
     <div className="App">
+    {isLoading &&
+      <main style={pageStyles}>
+        <h1 style={headingStyles}>
+          Doing some work
+          <br />
+          <span style={headingAccentStyles}>— brb! </span>
+          <span role="img" aria-label="Party popper emojis">
+          🧐🧐🧐
+          </span>
+        </h1>
+      </main>
+    }
+    {!isLoading &&
       <main style={pageStyles}>
         <title>Perma Evidence</title>
         <h1 style={headingStyles}>
@@ -163,22 +178,34 @@ function App() {
             🎉🎉🎉
           </span>
         </h1>
+        <p style={descriptionStyle}>
+          We create the Neural Hash of your image/nft and store it along with the original uploader.
+          <br />
+          You can use this to have evidence that your image already existed at a certain point in time.
+          <br />
+          The neural hash guarantees that even cropped, transformed, and different file formats of your image hash to the same value.
+          <br />
+          <span style={headingAccentStyles}>— it's digital evidence! </span>
+          <span role="img" aria-label="Party popper emojis">
+            🎉🎉🎉
+          </span>
+        </p>
         <p style={paragraphStyles}>
           contract version <a target="_blank" href="https://viewblock.io/arweave/tx/{contractId}">{contractId}</a>
           <span role="img" aria-label="Sunglasses smiley emoji">
             😎
           </span>
         </p>
-        {images.length > 0 &&
+        {images.length > 0 && imageHash != '' &&
           <div>
-            <h3 style={headingStyles}>The permahash of your image is
+            <h3 style={headingStyles}>The Neural Hash of your image is
             <br />
             <span style={headingAccentStyles}>'{imageHash}'</span>
             </h3>
             <br />
             {existingHash && 
               <h3 style={headingStyles}>
-              Hash Found in Database - it was recorded by
+              Neural Hash Found in Database - it was recorded by
               <br />
               <span style={headingAccentStyles}>'{existingHash.author}'</span>
               <br />
@@ -191,7 +218,7 @@ function App() {
         }
         {pendingTransactionId && pendingTransactionId != '' &&
           <h2>
-            Your permahash is persisting with transaction id
+            Your Neural Hash is persisting with transaction id
 
             <br />
             <span style={headingAccentStyles}><a target="_blank" href="https://viewblock.io/arweave/tx/{pendingTransactionId}">'{pendingTransactionId}'</a>.</span>
@@ -238,9 +265,10 @@ function App() {
           )}
         </ImageUploading>
         {images.length > 0 && !pendingTransactionId && !existingHash && 
-        <button onClick={createPermahash}>Store Hash Permanently (you need to have ARConnect Installed to do this)</button>
+        <button onClick={createPermahash}>Store Neural Hash Permanently (you need to have ARConnect Installed to do this)</button>
         }
       </main>
+    }
     </div>
   );
 }
