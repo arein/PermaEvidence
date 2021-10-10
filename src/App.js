@@ -1,7 +1,7 @@
 import './App.css';
 import React from 'react';
 import ImageUploading from 'react-images-uploading';
-import { readContract, interactWrite } from 'smartweave';
+import { readContract, interactWrite, interactWriteDryRun } from 'smartweave';
 import Arweave from 'arweave';
 import NeuralHash from './NeuralHash';
 
@@ -148,12 +148,16 @@ function App() {
       'hash': imageHash
     };
     loadState().then(() => {
-      interactWrite(arweave, null, contractId, input).then((result) => {
-        console.log('arweave status', result);
-        setPendingTransactionId(result);
-        loadState().then((state) => {
-          console.log("state after transaction", state);
-          startPollingPendingTransaction(result);
+      interactWriteDryRun(arweave, null, contractId, input).then((dryRunresult) => {
+        console.log('dry drun result', dryRunresult)
+        interactWrite(arweave, null, contractId, input).then((result) => {
+          console.log('arweave status', result);
+          loadState().then((state) => {
+            console.log(state);
+            setPendingTransactionId(result);
+            console.log("state after transaction", state);
+            startPollingPendingTransaction(result);
+          });
         });
       });
     });
