@@ -99,14 +99,16 @@ function App() {
     
     if (imageList.length > 0) {
       setIsLoadingImageHash(true);
-      neuralHash.getNeuralHash(imageList[0]).then((hash) => {
-        console.log('yay', hash);
-        setImageHash(hash);
-        lookupImageHash(hash);
-        setIsLoadingImageHash(false);
-      }).catch((err) => {
-        console.error(err);
-        setIsLoadingImageHash(false);
+      loadState().then(() => {
+        neuralHash.getNeuralHash(imageList[0]).then((hash) => {
+          console.log('yay', hash);
+          setImageHash(hash);
+          lookupImageHash(hash);
+          setIsLoadingImageHash(false);
+        }).catch((err) => {
+          console.error(err);
+          setIsLoadingImageHash(false);
+        });
       });
     }
   };
@@ -116,7 +118,7 @@ function App() {
   };
 
   const lookupImageHash = (hash) => {
-    readContract(arweave, contractId).then((state) => {
+    loadState().then((state) => {
       console.log(state);
       const found = state.hashes.filter((existingHash) => {
         return existingHash.hash === hash;
@@ -149,7 +151,7 @@ function App() {
       interactWrite(arweave, null, contractId, input).then((result) => {
         console.log('arweave status', result);
         setPendingTransactionId(result);
-        readContract(arweave, contractId).then((state) => {
+        loadState().then((state) => {
           console.log("state after transaction", state);
           startPollingPendingTransaction(result);
         });
