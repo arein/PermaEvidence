@@ -83,7 +83,7 @@ function App() {
   const [images, setImages] = React.useState([]);
   const [imageHash, setImageHash] = React.useState('');
   const [isLoadingImageHash, setIsLoadingImageHash] = React.useState(false);
-  const [existingHash, setExistingHash] = React.useState('');
+  const [existingHash, setExistingHash] = React.useState(false);
   const [pendingTransactionId, setPendingTransactionId] = React.useState('');
   const maxNumber = 1;
   const contractId = "dy0QCK-wfl-KoTqsk6fomco64u9YHIhcISjNta71CSA";
