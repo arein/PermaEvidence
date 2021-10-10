@@ -251,7 +251,7 @@ function App() {
                 onClick={onImageUpload}
                 {...dragProps}
               >
-                Click or Drop here
+                Click here or Drop image to generate its Neural Hash
               </button>
               }
               &nbsp;
