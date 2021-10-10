@@ -214,6 +214,16 @@ function App() {
               <span style={headingAccentStyles}>{new Date(existingHash.createdAt * 1000).toUTCString()}  </span>
             </h3>
             }
+            {!existingHash && 
+              <h1 style={headingStyles}>
+              Neural Hash not yet found in database
+              <br />
+              <span style={headingAccentStyles}>— go ahead and claim it! </span>
+              <span role="img" aria-label="Party popper emojis">
+                🎉🎉🎉
+              </span>
+            </h1>
+            }
           </div>
         }
         {pendingTransactionId && pendingTransactionId != '' &&
