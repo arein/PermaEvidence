@@ -111,6 +111,10 @@ function App() {
     }
   };
 
+  const loadState = () => {
+    return readContract(arweave, contractId);
+  };
+
   const lookupImageHash = (hash) => {
     readContract(arweave, contractId).then((state) => {
       console.log(state);
@@ -141,12 +145,14 @@ function App() {
       'function': 'index',
       'hash': imageHash
     };
-    interactWrite(arweave, null, contractId, input).then((result) => {
-      console.log('arweave status', result);
-      setPendingTransactionId(result);
-      readContract(arweave, contractId).then((state) => {
-        console.log("state after transaction", state);
-        startPollingPendingTransaction(result);
+    loadState().then(() => {
+      interactWrite(arweave, null, contractId, input).then((result) => {
+        console.log('arweave status', result);
+        setPendingTransactionId(result);
+        readContract(arweave, contractId).then((state) => {
+          console.log("state after transaction", state);
+          startPollingPendingTransaction(result);
+        });
       });
     });
   };
